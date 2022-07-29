@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc"
 	"grpcImplementation/proto"
 	"io"
+	"time"
 )
 
 func main() {
@@ -22,6 +23,9 @@ func main() {
 
 	//Server-Side Streaming method
 	callPrimeNumbers(c)
+
+	//Client-Side Streaming method
+	callComputeAverage(c)
 }
 
 func callSum(c proto.CalculatorServiceClient) {
@@ -57,7 +61,6 @@ func callPrimeNumbers(c proto.CalculatorServiceClient) {
 
 	fmt.Print("Result from the PrimeNumbers() is : ")
 	for {
-		//fmt.Println("hello")
 		msg, err := res.Recv()
 		if err == io.EOF { //we have reached to the end of the file
 			break
@@ -67,4 +70,50 @@ func callPrimeNumbers(c proto.CalculatorServiceClient) {
 		}
 		fmt.Print(msg.Result, "\t")
 	}
+}
+
+func callComputeAverage(c proto.CalculatorServiceClient) {
+
+	fmt.Println("\n\nCalling calculator.ComputeAverage() Method")
+
+	stream, err := c.ComputeAverage(context.Background())
+
+	if err != nil {
+		fmt.Println("Error in ComputeAverage() ", err)
+	}
+
+	var requests []*proto.ComputeAverageRequest
+
+	requests = append(requests, &proto.ComputeAverageRequest{
+		Num: 2,
+	})
+	requests = append(requests, &proto.ComputeAverageRequest{
+		Num: 3,
+	})
+	requests = append(requests, &proto.ComputeAverageRequest{
+		Num: 4,
+	})
+	requests = append(requests, &proto.ComputeAverageRequest{
+		Num: 5,
+	})
+	requests = append(requests, &proto.ComputeAverageRequest{
+		Num: 6,
+	})
+	requests = append(requests, &proto.ComputeAverageRequest{
+		Num: 7,
+	})
+	requests = append(requests, &proto.ComputeAverageRequest{
+		Num: 8,
+	})
+
+	for _, request := range requests {
+		stream.Send(request)
+		time.Sleep(100 * time.Millisecond)
+	}
+	response, err := stream.CloseAndRecv()
+	if err != nil {
+		fmt.Println("Error while receiving response from server : ", err)
+	}
+	fmt.Println("Result from the ComputeAverage() : ", response.GetResult())
+
 }

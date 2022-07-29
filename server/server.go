@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"grpcImplementation/proto"
+	"io"
 	"net"
 )
 
@@ -47,7 +48,6 @@ func (*server) PrimeNumbers(request *proto.PrimeNumbersRequest, response proto.C
 	var i int64
 	for i = 2; i < request.GetNum(); i++ {
 		isPrime := checkIsPrime(i)
-		fmt.Println("Value of i is ", i, "isPrime", isPrime)
 		if isPrime {
 			response.Send(&proto.PrimeNumbersResponse{
 				Result: i,
@@ -55,6 +55,28 @@ func (*server) PrimeNumbers(request *proto.PrimeNumbersRequest, response proto.C
 		}
 	}
 	return nil
+}
+
+func (*server) ComputeAverage(request proto.CalculatorService_ComputeAverageServer) error {
+	fmt.Println("*** ComputeAverage Method was called ***")
+
+	var sum int64 = 0
+	var cnt int64 = 0
+
+	for {
+		msg, err := request.Recv()
+		if err == io.EOF { //we have finished reading client stream
+			return request.SendAndClose(&proto.ComputeAverageResponse{
+				Result: sum / cnt,
+			})
+		}
+		if err != nil {
+			fmt.Println("Error while reading client stream : ", err)
+		}
+
+		sum = sum + msg.Num
+		cnt = cnt + 1
+	}
 }
 
 func checkIsPrime(num int64) bool {
