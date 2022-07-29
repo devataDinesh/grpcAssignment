@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+option go_package = "./;proto";
+
+message sumRequest{
+  int64 num1 = 1;
+  int64 num2 = 2;
+}
+
+message sumResponse{
+  int64 result = 1;
+}
+
+message primeNumbersRequest{
+  int64 num = 1;
+}
+
+message primeNumbersResponse{
+  int64 result = 1;
+}
+
+message computeAverageRequest{
+  int64 num = 1;
+}
+
+message computeAverageResponse{
+  int64 result = 1;
+}
+
+message findMaxAverageRequest{
+  int64 num = 1;
+}
+
+message findMaxAverageResponse{
+  int64 result = 1;
+}
+
+
+service calculatorService{
+
+  rpc Sum(sumRequest) returns (sumResponse){};
+
+  rpc PrimeNumbers(primeNumbersRequest) returns (stream primeNumbersResponse){};
+
+  rpc ComputeAverage(stream computeAverageRequest) returns (computeAverageResponse){};
+
+  rpc FindMaxNumber(stream findMaxAverageRequest) returns (stream findMaxAverageResponse){};
+
+}
