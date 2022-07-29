@@ -79,6 +79,35 @@ func (*server) ComputeAverage(request proto.CalculatorService_ComputeAverageServ
 	}
 }
 
+func (*server) FindMaxNumber(stream proto.CalculatorService_FindMaxNumberServer) error {
+
+	fmt.Println("*** FindMaxNumber Method was called ***")
+
+	var max int64 = 0
+
+	for {
+		request, err := stream.Recv()
+
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			fmt.Println("error while receiving data from  client : ", err)
+			return err
+		}
+		if max < request.GetNum() {
+			max = request.GetNum()
+			sendErr := stream.Send(&proto.FindMaxAverageResponse{
+				Result: max,
+			})
+			if sendErr != nil {
+				fmt.Println("Error while sending Response to the client ", err)
+				return err
+			}
+		}
+	}
+}
+
 func checkIsPrime(num int64) bool {
 	var j int64
 	for j = 2; j < num-1; j++ {

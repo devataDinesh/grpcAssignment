@@ -21,11 +21,15 @@ func main() {
 	//Unary Method
 	callSum(c)
 
-	//Server-Side Streaming method
+	//Server-Side Streaming Method
 	callPrimeNumbers(c)
 
-	//Client-Side Streaming method
+	//Client-Side Streaming Method
 	callComputeAverage(c)
+
+	//Bi-Directional Streaming Method
+	callFindMaxNumber(c)
+
 }
 
 func callSum(c proto.CalculatorServiceClient) {
@@ -116,4 +120,76 @@ func callComputeAverage(c proto.CalculatorServiceClient) {
 	}
 	fmt.Println("Result from the ComputeAverage() : ", response.GetResult())
 
+}
+
+func callFindMaxNumber(c proto.CalculatorServiceClient) {
+
+	fmt.Println("\nCalling calculator.FindMaxNumber() Method")
+
+	requests := []*proto.FindMaxAverageRequest{
+		&proto.FindMaxAverageRequest{
+			Num: 1,
+		},
+		&proto.FindMaxAverageRequest{
+			Num: 3,
+		},
+		&proto.FindMaxAverageRequest{
+			Num: 7,
+		},
+		&proto.FindMaxAverageRequest{
+			Num: 9,
+		},
+		&proto.FindMaxAverageRequest{
+			Num: 2,
+		},
+		&proto.FindMaxAverageRequest{
+			Num: 5,
+		},
+		&proto.FindMaxAverageRequest{
+			Num: 22,
+		},
+		&proto.FindMaxAverageRequest{
+			Num: 15,
+		},
+		&proto.FindMaxAverageRequest{
+			Num: 21,
+		},
+	}
+
+	stream, err := c.FindMaxNumber(context.Background())
+	if err != nil {
+		fmt.Println("Error occurred while performing the client-side streaming ", err)
+	}
+
+	waitChannel := make(chan struct{})
+
+	go func(requests []*proto.FindMaxAverageRequest) {
+		for _, req := range requests {
+			err := stream.Send(req)
+			if err != nil {
+				fmt.Println("Error while sending request to FindMaxNumber() : ", err)
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+		stream.CloseSend()
+	}(requests)
+
+	fmt.Print("Result from the FindMaxNumber() : ")
+	go func() {
+		for {
+			response, err := stream.Recv()
+
+			if err == io.EOF {
+				close(waitChannel)
+				return
+			}
+
+			if err != nil {
+				fmt.Println("error while receiving response from server : ", err)
+			}
+
+			fmt.Print(response.GetResult(), "\t")
+		}
+	}()
+	<-waitChannel
 }
